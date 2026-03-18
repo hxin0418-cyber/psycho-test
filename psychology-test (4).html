@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深渊之镜 · 依恋模式测试</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #070810;
+    --bg-mid: #0d0f1a;
+    --bg-card: #111525;
+    --bg-hover: #171c30;
+    --accent-gold: #c9a84c;
+    --accent-gold-dim: #7d6530;
+    --accent-purple: #7b5ea7;
+    --accent-teal: #3d9e8c;
+    --accent-rose: #c46b7a;
+    --text-primary: #e8e0d0;
+    --text-secondary: #9090a8;
+    --text-dim: #555570;
+    --border: rgba(201,168,76,0.15);
+    --border-hover: rgba(201,168,76,0.4);
+    --glow-gold: 0 0 30px rgba(201,168,76,0.2);
+    --glow-purple: 0 0 30px rgba(123,94,167,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.6;
+  }
+
+  /* ─── STAR CANVAS ─── */
+  #starfield {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── SCROLL CONTAINER ─── */
+  .app {
+    position: relative; z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; animation: fadeIn 0.8s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── HEADER ─── */
+  .site-header {
+    text-align: center;
+    padding: 80px 0 48px;
+    position: relative;
+  }
+  .site-header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+  .eyebrow {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--accent-gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .main-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #e8d9b5, #c9a84c, #e8d9b5);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    text-shadow: none;
+    filter: drop-shadow(0 0 20px rgba(201,168,76,0.4));
+  }
+  .sub-title {
+    font-size: 15px;
+    color: var(--text-secondary);
+    letter-spacing: 3px;
+    font-weight: 300;
+  }
+
+  /* ─── INTRO CARD ─── */
+  .intro-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 48px;
+    margin: 48px 0 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .intro-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+  .intro-card::after {
+    content: '"';
+    position: absolute; top: 20px; right: 32px;
+    font-size: 160px; line-height: 1;
+    color: rgba(201,168,76,0.04);
+    font-family: Georgia, serif;
+  }
+  .intro-quote {
+    font-size: 18px;
+    line-height: 2;
+    color: var(--text-secondary);
+    font-weight: 300;
+    font-style: italic;
+    border-left: 2px solid var(--accent-gold-dim);
+    padding-left: 24px;
+    margin-bottom: 32px;
+  }
+  .intro-meta {
+    display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .meta-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-gold);
+    box-shadow: 0 0 8px rgba(201,168,76,0.6);
+  }
+
+  /* ─── SCORING INFO ─── */
+  .scoring-guide {
+    background: rgba(123,94,167,0.06);
+    border: 1px solid rgba(123,94,167,0.2);
+    border-radius: 2px;
+    padding: 28px 36px;
+    margin-bottom: 40px;
+  }
+  .scoring-guide h3 {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'IM Fell English SC', serif;
+  }
+  .score-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .score-option-info {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+  }
+  .score-num {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 18px;
+    color: var(--accent-gold);
+    min-width: 20px;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  /* ─── START BUTTON ─── */
+  .btn-start {
+    display: block;
+    width: 100%;
+    padding: 20px;
+    background: transparent;
+    border: 1px solid var(--accent-gold-dim);
+    color: var(--accent-gold);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-start::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(201,168,76,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  .btn-start:hover::before { transform: translateX(100%); }
+  .btn-start:hover {
+    border-color: var(--accent-gold);
+    box-shadow: var(--glow-gold);
+    background: rgba(201,168,76,0.04);
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-header {
+    padding: 60px 0 32px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .progress-label {
+    font-size: 11px; letter-spacing: 4px;
+    color: var(--text-dim); white-space: nowrap;
+    font-family: 'IM Fell English SC', serif;
+  }
+  .progress-bar-wrap {
+    flex: 1; height: 1px;
+    background: rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--accent-gold);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(201,168,76,0.6);
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute; right: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.8);
+  }
+  .progress-count {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 13px; color: var(--accent-gold-dim);
+    min-width: 48px; text-align: right;
+  }
+
+  /* ─── QUESTION CARD ─── */
+  .question-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 48px;
+    margin-bottom: 24px;
+    position: relative;
+    transition: border-color 0.3s;
+  }
+  .question-card:hover { border-color: var(--border-hover); }
+  .question-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+  }
+  .q-dimension {
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'IM Fell English SC', serif;
+  }
+  .q-dim-anxiety { color: var(--accent-rose); }
+  .q-dim-avoidance { color: var(--accent-teal); }
+  .q-number {
+    position: absolute; top: 48px; right: 48px;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 48px;
+    color: rgba(201,168,76,0.06);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .q-text {
+    font-size: 18px;
+    line-height: 2;
+    font-weight: 300;
+    color: var(--text-primary);
+    margin-bottom: 36px;
+    padding-right: 60px;
+  }
+
+  /* ─── RATING BUTTONS ─── */
+  .rating-row {
+    display: flex; gap: 8px;
+  }
+  .rating-btn {
+    flex: 1;
+    padding: 14px 8px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    font-family: 'Noto Serif SC', serif;
+    border-radius: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rating-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--accent-gold);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .rating-btn:hover { border-color: rgba(201,168,76,0.3); }
+  .rating-btn:hover .rb-num { color: var(--accent-gold); }
+  .rating-btn.selected { border-color: var(--accent-gold); background: rgba(201,168,76,0.08); }
+  .rating-btn.selected .rb-num { color: var(--accent-gold); }
+  .rating-btn.selected .rb-label { color: var(--text-secondary); }
+  .rb-num {
+    display: block;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 22px;
+    color: var(--text-dim);
+    transition: color 0.25s;
+    margin-bottom: 6px;
+  }
+  .rb-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: rgba(144,144,168,0.5);
+    line-height: 1.4;
+    transition: color 0.25s;
+  }
+  .rating-btn.selected .rb-label {
+    color: rgba(201,168,76,0.7);
+  }
+
+  /* ─── NAV BUTTONS ─── */
+  .nav-row {
+    display: flex; gap: 12px; margin-top: 8px;
+  }
+  .btn-nav {
+    flex: 1; padding: 16px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-nav:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
+  .btn-nav.primary {
+    border-color: var(--accent-gold-dim);
+    color: var(--accent-gold);
+  }
+  .btn-nav.primary:hover {
+    border-color: var(--accent-gold);
+    box-shadow: var(--glow-gold);
+    background: rgba(201,168,76,0.04);
+  }
+  .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ─── RESULT SCREEN ─── */
+  .result-header {
+    padding: 72px 0 48px;
+    text-align: center;
+    position: relative;
+  }
+  .result-label {
+    font-size: 11px; letter-spacing: 6px;
+    color: var(--text-dim); text-transform: uppercase;
+    font-family: 'IM Fell English SC', serif;
+    margin-bottom: 16px;
+  }
+  .result-type-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(20px, 4vw, 32px);
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 20px currentColor);
+  }
+  .result-type-meta {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 0;
+  }
+
+  /* ─── AXIS CHART ─── */
+  .axis-chart {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 40px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .axis-chart::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+  .chart-title {
+    font-size: 10px; letter-spacing: 5px;
+    color: var(--text-dim); text-transform: uppercase;
+    font-family: 'IM Fell English SC', serif;
+    margin-bottom: 32px;
+  }
+  .axes-wrap {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .axis-row {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .axis-name {
+    font-size: 12px; letter-spacing: 2px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    font-family: 'IM Fell English SC', serif;
+  }
+  .axis-track {
+    flex: 1; height: 6px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .axis-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+  }
+  .axis-fill.anxiety { background: linear-gradient(90deg, var(--accent-rose), #e891a0); }
+  .axis-fill.avoidance { background: linear-gradient(90deg, var(--accent-teal), #5dcbb8); }
+  .axis-score {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 20px; min-width: 48px;
+    text-align: right;
+  }
+  .axis-score.anxiety { color: var(--accent-rose); }
+  .axis-score.avoidance { color: var(--accent-teal); }
+
+  /* ─── QUADRANT GRID ─── */
+  .quadrant-visual {
+    width: 180px; height: 180px;
+    margin: 32px auto;
+    position: relative;
+  }
+  .quadrant-grid {
+    width: 100%; height: 100%;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 4px;
+  }
+  .q-cell {
+    border-radius: 2px;
+    background: rgba(255,255,255,0.03);
+    transition: background 0.6s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .q-cell.active { background: rgba(201,168,76,0.12); box-shadow: inset 0 0 20px rgba(201,168,76,0.1); }
+  .q-cell-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.8);
+    display: none;
+  }
+  .q-cell.active .q-cell-dot { display: block; }
+  .quadrant-axis-h, .quadrant-axis-v {
+    position: absolute;
+    background: rgba(255,255,255,0.08);
+  }
+  .quadrant-axis-h {
+    left: 0; right: 0; top: 50%; height: 1px; margin-top: 2px;
+  }
+  .quadrant-axis-v {
+    top: 0; bottom: 0; left: 50%; width: 1px; margin-left: 2px;
+  }
+
+  /* ─── RESULT SECTIONS ─── */
+  .result-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 40px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-section::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0; width: 2px;
+  }
+  .result-section.sketch::before { background: linear-gradient(180deg, var(--accent-gold), transparent); }
+  .result-section.empathy::before { background: linear-gradient(180deg, var(--accent-purple), transparent); }
+  .result-section.light::before { background: linear-gradient(180deg, var(--accent-teal), transparent); }
+  .section-label {
+    font-size: 10px; letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'IM Fell English SC', serif;
+  }
+  .section-label.sketch { color: var(--accent-gold-dim); }
+  .section-label.empathy { color: var(--accent-purple); }
+  .section-label.light { color: var(--accent-teal); }
+  .section-content {
+    font-size: 16px;
+    line-height: 2.2;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+  .section-content strong {
+    color: var(--text-primary);
+    font-weight: 400;
+  }
+
+  /* ─── RESTART ─── */
+  .btn-restart {
+    display: block;
+    width: 100%;
+    margin-top: 40px;
+    padding: 20px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-restart:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text-secondary);
+  }
+
+  /* ─── ORNAMENT LINES ─── */
+  .ornament {
+    text-align: center;
+    color: var(--accent-gold-dim);
+    letter-spacing: 8px;
+    font-size: 12px;
+    margin: 32px 0;
+    font-family: 'IM Fell English SC', serif;
+  }
+
+  /* ─── RESULT COLOR THEMES ─── */
+  .type-fearful .result-type-name { color: var(--accent-rose); }
+  .type-dismissive .result-type-name { color: var(--accent-teal); }
+  .type-secure .result-type-name { color: #7eb87e; }
+  .type-anxious .result-type-name { color: var(--accent-purple); }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 600px) {
+    .intro-card, .question-card, .result-section, .axis-chart { padding: 28px 24px; }
+    .q-text { font-size: 16px; padding-right: 0; }
+    .q-number { display: none; }
+    .rb-label { font-size: 9px; letter-spacing: 0; }
+    .rating-btn { padding: 14px 3px; }
+    .rb-num { font-size: 18px; }
+    .score-options { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<div class="app">
+
+  <!-- ─── INTRO SCREEN ─── -->
+  <div class="screen active" id="screen-intro">
+    <header class="site-header">
+      <p class="eyebrow">Soul Mirror · Attachment Test</p>
+      <h1 class="main-title">深 渊 之 镜</h1>
+      <p class="sub-title">依恋模式深度测量</p>
+    </header>
+
+    <div class="intro-card">
+      <p class="intro-quote">
+        我们都在亲密关系的废墟和花园之间游走，<br>
+        却很少有人停下来，看清自己究竟站在哪里。<br>
+        这面镜子很冷，也很诚实。
+      </p>
+      <div class="intro-meta">
+        <div class="meta-item"><span class="meta-dot"></span>20道题</div>
+        <div class="meta-item"><span class="meta-dot"></span>约5分钟</div>
+        <div class="meta-item"><span class="meta-dot"></span>双轴正交模型</div>
+        <div class="meta-item"><span class="meta-dot"></span>深度解析报告</div>
+      </div>
+    </div>
+
+    <div class="scoring-guide">
+      <h3>作答量尺</h3>
+      <div class="score-options">
+        <div class="score-option-info"><span class="score-num">1</span><span>潜意识极度抗拒</span></div>
+        <div class="score-option-info"><span class="score-num">2</span><span>偶尔会有这种错觉</span></div>
+        <div class="score-option-info"><span class="score-num">3</span><span>一半清醒一半沉沦</span></div>
+        <div class="score-option-info"><span class="score-num">4</span><span>经常被这种感觉淹没</span></div>
+        <div class="score-option-info"><span class="score-num">5</span><span>这就是我隐秘的底色</span></div>
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startTest()">— 凝视深渊 —</button>
+  </div>
+
+  <!-- ─── QUIZ SCREEN ─── -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-header">
+      <span class="progress-label">Progress</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-count" id="progress-count">0 / 20</span>
+    </div>
+
+    <div class="question-card" id="question-card">
+      <div class="q-dimension" id="q-dim"></div>
+      <div class="q-number" id="q-num-display"></div>
+      <p class="q-text" id="q-text"></p>
+      <div class="rating-row" id="rating-row"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-nav" id="btn-prev" onclick="prevQ()">← 上一题</button>
+      <button class="btn-nav primary" id="btn-next" onclick="nextQ()">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- ─── RESULT SCREEN ─── -->
+  <div class="screen" id="screen-result">
+    <!-- dynamic content inserted here -->
+  </div>
+
+</div>
+
+<script>
+const QUESTIONS = [
+  { dim: 'A', text: '我总有一种隐秘的预感：任何现在对我好的人，最终都会发现我不值得被爱，然后离开我。' },
+  { dim: 'V', text: '当有人试图真正靠近我内心深处的脆弱时，我的第一生理反应不是感动，而是筑起高墙或想要逃跑。' },
+  { dim: 'A', text: '对方片刻的冷淡或信息回复迟缓，会在我内心迅速掀起一场"我是不是做错了什么"的风暴。' },
+  { dim: 'V', text: '我深信，在这个世界上唯一绝对安全的生存法则就是：永远不要彻底依赖任何人。' },
+  { dim: 'A', text: '在亲密关系中，我极度渴望被一个人完全"看透"并紧紧拥抱，但这种高浓度的索取往往会吓退对方。' },
+  { dim: 'V', text: '一旦一段关系变得过于亲密或稳定，我就会产生一种难以名状的窒息感，甚至潜意识里想破坏它。' },
+  { dim: 'A', text: '看到伴侣拥有完全独立于我的快乐世界（如朋友聚会、个人爱好），我有时不仅不替TA开心，反而会感到失落和嫉妒。' },
+  { dim: 'V', text: '面对伴侣激烈的情绪崩溃，我感到的往往不是心疼，而是想要逃离的压抑和厌烦。' },
+  { dim: 'A', text: '只要感情出现一点裂痕，我就仿佛失去了生活的重心，无法集中精力做任何其他事情。' },
+  { dim: 'V', text: '我需要大量的、绝对不被打扰的独处时间来"回血"，伴侣的过度靠近会让我觉得私人领地被侵犯。' },
+  { dim: 'A', text: '我常常需要伴侣反复、明确地用言语证明TA爱我，否则那种熟悉的不安感就会像潮水一样吞没我。' },
+  { dim: 'V', text: '在我遭遇重大挫折或极度痛苦时，我宁愿独自在一个漆黑的房间里熬过去，也不想向伴侣求助。' },
+  { dim: 'A', text: '当伴侣不经意间夸赞了其他人，我会在脑海里进行无数次痛苦的比较，甚至觉得自己一无是处。' },
+  { dim: 'V', text: '在每段关系达到某种深度的契合前，我总会不可控制地挑剔对方的瑕疵，仿佛在为最终的抽身寻找合理借口。' },
+  { dim: 'A', text: '只要我们之间发生一点未解决的争吵，哪怕是深夜我也无法安然入睡，非要立刻把话说清楚。' },
+  { dim: 'V', text: '哪怕是很相爱的人，一旦TA试图干涉我对未来的核心决策，我都会立刻产生一种强烈的防御和抵触心理。' },
+  { dim: 'A', text: '我在潜意识里经常把"掌控对方的行踪和社交"等同于"TA不会离开我的安全感"。' },
+  { dim: 'V', text: '那些过于黏腻的肢体接触（如长时间的拥抱或依偎），在最初的片刻之后，往往会让我感到僵硬和不适。' },
+  { dim: 'A', text: '我在关系中通常是那个付出更多、妥协更多，同时也索取更多情绪价值的人。' },
+  { dim: 'V', text: '无论关系多么亲密，我内心始终保留着一个绝对不允许任何人踏入的孤岛。' },
+];
+
+const RESULTS = {
+  fearful: {
+    name: '手握玻璃渣的刺猬',
+    meta: '恐惧型 / 矛盾型依恋 · Fearful-Avoidant',
+    cssClass: 'type-fearful',
+    sketch: '你在爱里是一座随时会喷发的活火山，既渴望被拥抱，又害怕被燃烧。',
+    empathy: `别人总觉得你忽冷忽热、情绪化、难以捉摸，甚至在关系最好的时候突然搞砸一切。但只有你自己知道，那是因为你太害怕了。你推开对方，不是因为不爱，而是为了测试他们会不会像过去那些人一样放弃你。<br><br>你紧紧握住名为"亲密"的玻璃渣，哪怕鲜血淋漓也不肯松手，因为你潜意识里觉得，如果你不痛，这段关系就不够真实。你的每一根尖刺，都在绝望地呼喊着<strong>「请看穿我的脆弱，并坚定地留下来」</strong>。`,
+    light: '你的核心创伤在于"既不相信自己值得被爱，也不相信别人能提供安全的爱"。你需要明白，测试人性往往只会得到失望。下一次想推开对方时，试着停顿三秒，分辨那是当下的危险，还是童年阴影的回声。',
+    quadrant: 3, // top-right (high A, high V)
+  },
+  dismissive: {
+    name: '恒温冷库里的幸存者',
+    meta: '疏离型 / 高回避依恋 · Dismissive-Avoidant',
+    cssClass: 'type-dismissive',
+    sketch: '你是一座装备精良的孤岛，拒绝任何未经过安检的船只靠岸。',
+    empathy: `在外人眼里，你独立、清醒、甚至有些冷酷。你似乎永远可以在感情里全身而退，永远最爱自己。但这绝非天生，而是一种为了生存演化出的极致防御机制。<br><br>也许在很久以前，当你试着展露需求时，回应你的只有漠视或打压。于是你学会了掐灭所有的期待，你坚信<strong>「只要我不依赖任何人，就永远不会被辜负」</strong>。你并非不需要爱，你只是认定爱是一种极度危险、且必定会带来麻烦的消耗品。`,
+    light: '真正的独立不是隔绝一切，而是拥有随时进入关系和退出关系的能力，但你目前只保留了退出的能力。试着在绝对安全的环境下，向一个值得信任的人暴露哪怕10%的脆弱，你会发现，天并没有塌下来。',
+    quadrant: 2, // top-left (low A, high V)
+  },
+  secure: {
+    name: '情绪避风港',
+    meta: '安全型依恋 · Secure Attachment',
+    cssClass: 'type-secure',
+    sketch: '你是一片深邃而平静的湖泊，既能倒映星空，也能包容暗流。',
+    empathy: `在这个充满戏剧化推拉和焦虑内耗的时代，你的稳定显得尤为珍贵。面对亲密关系，你不畏惧全身心投入，也不害怕适时的独处。当伴侣需要空间时，你不会觉得那是对你的否定；当感情出现摩擦时，你拥有坐下来缝补它的耐心，而不是立刻转身逃跑。<br><br>你有一种<strong>温柔的韧性</strong>，知道自己的底线在哪里，也懂得如何爱人如己。`,
+    light: '你已经是很多人向往的终点。唯一需要注意的是，由于你过高的包容度，有时可能会吸引来极度消耗你的"吸血鬼"。保持你的温暖，但请务必将最锋利的边界留给那些试图过度剥削你情绪的人。',
+    quadrant: 0, // bottom-left (low A, low V)
+  },
+  anxious: {
+    name: '暴风眼中的献祭者',
+    meta: '痴迷型 / 高焦虑依恋 · Preoccupied / Anxious',
+    cssClass: 'type-anxious',
+    sketch: '你是一只在雷雨天里寻找屋檐的小狗，为了不被赶走，愿意献出所有骨头。',
+    empathy: `你在爱里经常感到委屈和疲惫，因为你永远是那个秒回信息、反复妥协、不断付出的人。你极其敏锐，对方一个微小的眼神变化，都能在你的世界里引发海啸。<br><br>你经常被指责为"太黏人"或"控制欲强"，但那根本不是控制，那是深不见底的不安。你的内在小孩太害怕被抛弃了，所以你试图用极端的"好"和无底线的付出来捆绑住对方。你以为那是爱，但那其实是<strong>对丧失的恐惧</strong>。`,
+    light: '你把证明自己存在价值的钥匙，完全交到了别人手里。你需要停止在废墟里捡拾别人施舍的爱意。把倾注在对方身上那100%的关注力，强行撤回50%放在自己身上。你本身就值得被爱，不需要通过持续的"献祭"来换取。',
+    quadrant: 1, // bottom-right (high A, low V)
+  },
+};
+
+let answers = new Array(20).fill(null);
+let currentQ = 0;
+
+function startTest() {
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  const answered = answers[currentQ];
+
+  // Progress
+  const pct = (currentQ / 20) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-count').textContent = `${currentQ + 1} / 20`;
+
+  // Dimension label
+  const dimEl = document.getElementById('q-dim');
+  if (q.dim === 'A') {
+    dimEl.textContent = '▲  焦虑维度 · Anxiety Axis';
+    dimEl.className = 'q-dimension q-dim-anxiety';
+  } else {
+    dimEl.textContent = '▼  回避维度 · Avoidance Axis';
+    dimEl.className = 'q-dimension q-dim-avoidance';
+  }
+
+  document.getElementById('q-num-display').textContent = String(currentQ + 1).padStart(2, '0');
+  document.getElementById('q-text').textContent = q.text;
+
+  // Rating buttons
+  const row = document.getElementById('rating-row');
+  const labels = ['这完全\n不是我', '部分\n不认可', '不太\n清楚', '部分\n认可', '这就\n是我'];
+  row.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'rating-btn' + (answered === i ? ' selected' : '');
+    btn.innerHTML = `<span class="rb-num">${i}</span><span class="rb-label">${labels[i-1].replace('\n', '<br>')}</span>`;
+    btn.onclick = () => selectRating(i);
+    row.appendChild(btn);
+  }
+
+  // Nav
+  document.getElementById('btn-prev').disabled = currentQ === 0;
+  const nextBtn = document.getElementById('btn-next');
+  if (currentQ === 19) {
+    nextBtn.textContent = '揭示深渊 ✦';
+    nextBtn.onclick = finishTest;
+  } else {
+    nextBtn.textContent = '下一题 →';
+    nextBtn.onclick = nextQ;
+  }
+}
+
+function selectRating(val) {
+  answers[currentQ] = val;
+  document.querySelectorAll('.rating-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i + 1 === val);
+  });
+  // Auto-advance after short delay
+  setTimeout(() => {
+    if (currentQ < 19) { currentQ++; renderQuestion(); }
+    else finishTest();
+  }, 320);
+}
+
+function nextQ() {
+  if (answers[currentQ] === null) {
+    document.getElementById('question-card').style.animation = 'none';
+    document.getElementById('question-card').offsetHeight;
+    document.getElementById('question-card').style.borderColor = 'rgba(196,107,122,0.6)';
+    setTimeout(() => { document.getElementById('question-card').style.borderColor = ''; }, 800);
+    return;
+  }
+  if (currentQ < 19) { currentQ++; renderQuestion(); }
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+function finishTest() {
+  // Check all answered
+  const unanswered = answers.findIndex(a => a === null);
+  if (unanswered !== -1) {
+    currentQ = unanswered;
+    renderQuestion();
+    return;
+  }
+
+  // Score
+  let anxScore = 0, avoScore = 0;
+  for (let i = 0; i < 20; i++) {
+    if (i % 2 === 0) anxScore += answers[i]; // odd questions (0-indexed even)
+    else avoScore += answers[i];
+  }
+
+  // Determine type
+  const highA = anxScore > 30, highV = avoScore > 30;
+  let typeKey;
+  if (highA && highV) typeKey = 'fearful';
+  else if (!highA && highV) typeKey = 'dismissive';
+  else if (!highA && !highV) typeKey = 'secure';
+  else typeKey = 'anxious';
+
+  renderResult(typeKey, anxScore, avoScore);
+}
+
+function renderResult(typeKey, anxScore, avoScore) {
+  const r = RESULTS[typeKey];
+  const pctA = ((anxScore - 10) / 40) * 100;
+  const pctV = ((avoScore - 10) / 40) * 100;
+
+  // Quadrant grid cells: [TL=dismissive, TR=fearful, BL=secure, BR=anxious]
+  // quadrant index: 0=BL, 1=BR, 2=TL, 3=TR
+  const activeCell = r.quadrant;
+
+  const resultEl = document.getElementById('screen-result');
+  resultEl.innerHTML = `
+    <div class="result-header ${r.cssClass}">
+      <p class="result-label">Attachment Profile · 依恋画像</p>
+      <h2 class="result-type-name">${r.name}</h2>
+      <p class="result-type-meta">${r.meta}</p>
+    </div>
+
+    <div class="axis-chart">
+      <p class="chart-title">Axis Scores · 双轴坐标</p>
+      <div style="display:flex; align-items:center; gap:40px; flex-wrap:wrap;">
+        <div class="quadrant-visual">
+          <div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:3px;color:var(--text-dim);font-family:'IM Fell English SC',serif;">HIGH V</div>
+          <div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:3px;color:var(--text-dim);font-family:'IM Fell English SC',serif;">LOW V</div>
+          <div style="position:absolute;right:-32px;top:50%;transform:translateY(-50%) rotate(90deg);font-size:9px;letter-spacing:3px;color:var(--text-dim);font-family:'IM Fell English SC',serif;">HIGH A</div>
+          <div style="position:absolute;left:-28px;top:50%;transform:translateY(-50%) rotate(-90deg);font-size:9px;letter-spacing:3px;color:var(--text-dim);font-family:'IM Fell English SC',serif;">LOW A</div>
+          <div class="quadrant-grid">
+            <div class="q-cell ${activeCell===2?'active':''}" style="order:0"><div class="q-cell-dot"></div></div>
+            <div class="q-cell ${activeCell===3?'active':''}" style="order:1"><div class="q-cell-dot"></div></div>
+            <div class="q-cell ${activeCell===0?'active':''}" style="order:2"><div class="q-cell-dot"></div></div>
+            <div class="q-cell ${activeCell===1?'active':''}" style="order:3"><div class="q-cell-dot"></div></div>
+          </div>
+          <div class="quadrant-axis-h"></div>
+          <div class="quadrant-axis-v"></div>
+        </div>
+        <div class="axes-wrap" style="flex:1; min-width:200px;">
+          <div class="axis-row">
+            <span class="axis-name">焦虑 · A</span>
+            <div class="axis-track"><div class="axis-fill anxiety" id="fill-a" style="width:0%"></div></div>
+            <span class="axis-score anxiety">${anxScore}</span>
+          </div>
+          <div class="axis-row">
+            <span class="axis-name">回避 · V</span>
+            <div class="axis-track"><div class="axis-fill avoidance" id="fill-v" style="width:0%"></div></div>
+            <span class="axis-score avoidance">${avoScore}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:8px;font-family:'IM Fell English SC',serif;">
+            量程 10–50 · 阈值 30
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-section sketch">
+      <p class="section-label sketch">潜意识素描 · Subconscious Sketch</p>
+      <p class="section-content">${r.sketch}</p>
+    </div>
+
+    <div class="result-section empathy">
+      <p class="section-label empathy">深层共情 · Clinical Empathy</p>
+      <p class="section-content">${r.empathy}</p>
+    </div>
+
+    <div class="result-section light">
+      <p class="section-label light">破局微光 · A Way Forward</p>
+      <p class="section-content">${r.light}</p>
+    </div>
+
+    <div class="ornament">· · · · · ·</div>
+
+    <button class="btn-restart" onclick="restartTest()">— 重新凝视 —</button>
+  `;
+
+  showScreen('screen-result');
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.getElementById('fill-a').style.width = pctA + '%';
+    document.getElementById('fill-v').style.width = pctV + '%';
+  }, 200);
+}
+
+function restartTest() {
+  answers = new Array(20).fill(null);
+  currentQ = 0;
+  showScreen('screen-intro');
+}
+
+// ─── STARFIELD ───
+(function() {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < 120; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 0.8 + 0.2,
+        o: Math.random() * 0.4 + 0.1,
+        speed: Math.random() * 0.0004 + 0.0002,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t += 0.01;
+    stars.forEach(s => {
+      const opacity = s.o * (0.6 + 0.4 * Math.sin(t * s.speed * 1000 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201,168,76,${opacity})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); createStars(); });
+  resize(); createStars(); draw();
+})();
+</script>
+</body>
+</html>
